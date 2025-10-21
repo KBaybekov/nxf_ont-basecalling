@@ -1,0 +1,65 @@
+repository_type: pipeline
+
+nf_core_version: 3.4.1
+
+lint:
+  files_unchanged:
+    - .prettierignore
+    - .prettierignore
+    - .prettierignore
+    - CODE_OF_CONDUCT.md
+    - assets/nf-core-basecalling_logo_light.png
+    - docs/images/nf-core-basecalling_logo_light.png
+    - docs/images/nf-core-basecalling_logo_dark.png
+    - .github/ISSUE_TEMPLATE/bug_report.yml
+    - .github/CONTRIBUTING.md
+    - .github/PULL_REQUEST_TEMPLATE.md
+    - assets/email_template.txt
+    - docs/README.md
+    - .prettierignore
+  nextflow_config:
+    - manifest.name
+    - manifest.homePage
+    - process.cpus
+    - process.memory
+    - process.time
+    - custom_config
+    - params.custom_config_version
+    - params.custom_config_base
+  multiqc_config:
+    - report_comment
+  files_exist:
+    - conf/igenomes.config
+    - conf/igenomes_ignored.config
+    - CODE_OF_CONDUCT.md
+    - assets/nf-core-basecalling_logo_light.png
+    - docs/images/nf-core-basecalling_logo_light.png
+    - docs/images/nf-core-basecalling_logo_dark.png
+    - .github/ISSUE_TEMPLATE/config.yml
+    - .github/workflows/awstest.yml
+    - .github/workflows/awsfulltest.yml
+    - assets/email_template.html
+    - assets/sendmail_template.txt
+    - assets/email_template.txt
+    - conf/igenomes.config
+  included_configs: false
+
+template:
+  org: nxf_ont
+  name: basecalling
+  description: ONT basecalling pipeline using Dorado with FAST5 to POD5 conversion
+    support
+  author: Kirill Baybekov
+  version: 1.0.0
+  force: true
+  outdir: .
+  skip_features:
+    - igenomes
+    - fastqc
+    - nf_core_configs
+    - seqera_platform
+    - rocrate
+    - email
+    - adaptivecard
+    - slackreport
+  is_nfcore: false
