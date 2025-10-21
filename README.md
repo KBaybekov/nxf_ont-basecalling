@@ -1,3 +1,4 @@
+
 # nxf_ont/basecalling
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/nxf_ont/basecalling)
@@ -14,38 +15,43 @@
 
 ## Introduction
 
-**nxf_ont/basecalling** is a bioinformatics pipeline that ...
-
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+**nxf_ont/basecalling** is a bioinformatics pipeline for Oxford Nanopore Technologies (ONT) basecalling. The pipeline processes POD5 and FAST5 files, performs basecalling using Dorado with appropriate models based on pore versions and molecule types (DNA/RNA), and generates quality control reports. It automatically performs modification calling based on the pore version and molecule type, producing uBAM files along with comprehensive QC metrics.
 
 <!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
      workflows use the "tube map" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+
+The pipeline performs the following steps:
+
+1. Convert FAST5 files to POD5 format (if needed)
+2. Group files by pore version and molecule type (DNA/RNA)
+3. Perform basecalling with Dorado using appropriate models and containers
+4. Automatically perform modification calling based on pore version and molecule type
+5. Generate quality control reports with NanoPlot
+6. Collect all results into a comprehensive YAML summary
+7. Present QC for processed data ([`MultiQC`](http://multiqc.info/))
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
-
 First, prepare a samplesheet with your input data that looks as follows:
 
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample,files,pore_version,molecule_type
+sample1,/path/to/sample1.pod5,r941,dna
+sample2,/path/to/sample2.fast5,r1041,rna
+sample3,/path/to/sample3.pod5,r941,dna
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+Each row represents a sample with the following columns:
 
--->
+- `sample`: Sample name (must be unique)
+- `files`: Path to POD5 or FAST5 file(s)
+- `pore_version`: Pore version (r941 or r1041)
+- `molecule_type`: Type of molecule sequenced (dna or rna)
 
 Now, you can run the pipeline using:
 
@@ -76,6 +82,7 @@ If you would like to contribute to this pipeline, please see the [contributing g
 ## Citations
 
 <!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
+
 <!-- If you use nxf_ont/basecalling for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
 <!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
@@ -89,3 +96,4 @@ This pipeline uses code and infrastructure developed and maintained by the [nf-c
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
 >
 > _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
+>

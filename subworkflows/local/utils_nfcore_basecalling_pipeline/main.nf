@@ -79,21 +79,15 @@ workflow PIPELINE_INITIALISATION {
 
     Channel
         .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
-        .map {
-            meta, fastq_1, fastq_2 ->
-                if (!fastq_2) {
-                    return [ meta.id, meta + [ single_end:true ], [ fastq_1 ] ]
-                } else {
-                    return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ] ]
-                }
-        }
-        .groupTuple()
-        .map { samplesheet ->
-            validateInputSamplesheet(samplesheet)
-        }
-        .map {
-            meta, fastqs ->
-                return [ meta, fastqs.flatten() ]
+        .map { row ->
+            def meta = [:]
+            meta.id = row.sample
+            meta.pore_version = row.pore_version
+            meta.molecule_type = row.molecule_type
+            
+            def files = row.files instanceof List ? row.files : [row.files]
+            
+            return [meta, files, row.pore_version, row.molecule_type]
         }
         .set { ch_samplesheet }
 
@@ -142,15 +136,28 @@ workflow PIPELINE_COMPLETION {
 // Validate channels from input samplesheet
 //
 def validateInputSamplesheet(input) {
-    def (metas, fastqs) = input[1..2]
+    def (meta, files, pore_version, molecule_type) = input
 
-    // Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end
-    def endedness_ok = metas.collect{ meta -> meta.single_end }.unique().size == 1
-    if (!endedness_ok) {
-        error("Please check input samplesheet -> Multiple runs of a sample must be of the same datatype i.e. single-end or paired-end: ${metas[0].id}")
+    // Check that files exist and have correct extensions
+    files.each { file ->
+        if (!file.toString().endsWith('.pod5') && !file.toString().endsWith('.fast5')) {
+            error("Please check input samplesheet -> Files must have .pod5 or .fast5 extension: ${file}")
+        }
     }
 
-    return [ metas[0], fastqs ]
+    // Check that pore version is valid
+    def valid_pore_versions = ['r941', 'r1041']
+    if (!valid_pore_versions.contains(pore_version)) {
+        error("Please check input samplesheet -> Invalid pore version: ${pore_version}. Must be one of: ${valid_pore_versions.join(', ')}")
+    }
+
+    // Check that molecule type is valid
+    def valid_molecule_types = ['dna', 'rna']
+    if (!valid_molecule_types.contains(molecule_type)) {
+        error("Please check input samplesheet -> Invalid molecule type: ${molecule_type}. Must be one of: ${valid_molecule_types.join(', ')}")
+    }
+
+    return [meta, files, pore_version, molecule_type]
 }
 //
 // Generate methods description for MultiQC

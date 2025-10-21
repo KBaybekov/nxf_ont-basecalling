@@ -39,6 +39,9 @@ workflow NXF_ONT_BASECALLING {
         samplesheet
     )
     emit:
+    ubam_files     = BASECALLING.out.ubam_files     // channel: [ meta, ubam ]
+    qc_reports     = BASECALLING.out.qc_reports     // channel: [ meta, html ]
+    results        = BASECALLING.out.results        // channel: [ pipeline_results.yaml ]
     multiqc_report = BASECALLING.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
 /*
