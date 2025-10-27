@@ -1,0 +1,14 @@
+sequali:  
+  - meta:
+    - filesize
+  - summary:
+    - mean_length
+    - minimum_length
+    - maximum_length
+    - total_reads
+    - q20_reads
+    - total_bases
+    - q20_bases
+    - total_gc_bases
+    - total_n_bases
+    - read_pair_info

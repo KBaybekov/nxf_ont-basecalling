@@ -80,17 +80,13 @@ workflow PIPELINE_INITIALISATION {
     Channel
         .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
         .map { row ->
+            def file = row[0]
             def meta = [:]
-            meta.id = row.sample
-            meta.pore_version = row.pore_version
-            meta.molecule_type = row.molecule_type
-            
-            def files = row.files instanceof List ? row.files : [row.files]
-            
-            return [meta, files, row.pore_version, row.molecule_type]
+            meta.id = params.sample
+            meta.pore_version = params.pore       
+            return [meta, file]
         }
         .set { ch_samplesheet }
-
     emit:
     samplesheet = ch_samplesheet
     versions    = ch_versions

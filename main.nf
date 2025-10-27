@@ -13,7 +13,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { BASECALLING  } from './workflows/basecalling'
+include { ONT_BASECALLING         } from './workflows/ont_basecalling'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_basecalling_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_basecalling_pipeline'
 /*
@@ -22,28 +22,6 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_base
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-//
-// WORKFLOW: Run main analysis pipeline depending on type of input
-//
-workflow NXF_ONT_BASECALLING {
-
-    take:
-    samplesheet // channel: samplesheet read in from --input
-
-    main:
-
-    //
-    // WORKFLOW: Run pipeline
-    //
-    BASECALLING (
-        samplesheet
-    )
-    emit:
-    ubam_files     = BASECALLING.out.ubam_files     // channel: [ meta, ubam ]
-    qc_reports     = BASECALLING.out.qc_reports     // channel: [ meta, html ]
-    results        = BASECALLING.out.results        // channel: [ pipeline_results.yaml ]
-    multiqc_report = BASECALLING.out.multiqc_report // channel: /path/to/multiqc_report.html
-}
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -67,11 +45,12 @@ workflow {
         params.help_full,
         params.show_hidden
     )
-
+    //PIPELINE_INITIALISATION.out.samplesheet.view()
     //
     // WORKFLOW: Run main workflow
     //
-    NXF_ONT_BASECALLING (
+
+    ONT_BASECALLING (
         PIPELINE_INITIALISATION.out.samplesheet
     )
     //
@@ -80,7 +59,7 @@ workflow {
     PIPELINE_COMPLETION (
         params.outdir,
         params.monochrome_logs,
-        NXF_ONT_BASECALLING.out.multiqc_report
+        ONT_BASECALLING.out.multiqc_report
     )
 }
 
