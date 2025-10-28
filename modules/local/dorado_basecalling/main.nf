@@ -4,7 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Бейсколлинг POD5 файлов без выравнивания, с генерацией UBAM. Если версия поры 10.4.1 и не используется fast-модель, бейсколлинг проводится в duplex формате
     Входы: id образца, POD5 файлы, версия поры
-    Выходы: UBAM, версия dorado
+    Выходы: UBAM, использованная модель для бейсколлинга, версия dorado
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -21,6 +21,7 @@ process DORADO_BASECALLING {
 
     output:
     tuple val(meta), path("*.ubam"),      emit: ubam
+    env(USED_MODEL), emit: used_model 
     path "versions.yml", emit: versions
 
     when:
@@ -61,6 +62,12 @@ process DORADO_BASECALLING {
     
     """
     ${dorado_cmd}
+
+    export USED_MODEL=\$(samtools view \\
+    -H ${ubam_name}.ubam \\
+    | grep -oP \\
+    'basecall_model=\\K[^ ]+' \\
+    | head -1)
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

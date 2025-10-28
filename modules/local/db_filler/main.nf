@@ -3,6 +3,7 @@ process DB_FILLER {
 
     input:
       val ubam_path      // строка, напр. "./result/r941.ubam"
+      val used_model
       val qc_name        // строка, напр. "t3_basic:basecalling_sequali.html"
       val mqc_name       // строка или 'null'
       path input_files   // список JSON'ов (channel)
@@ -11,7 +12,7 @@ process DB_FILLER {
       path "${params.run_id}_to_db.yaml", emit: yaml
 
     script:
-    def set_params="--set ubam='${ubam_path}' --set qc='${qc_name}' --set mqc='${mqc_name}'"
+    def set_params="--set ubam='${ubam_path}' --set model='${used_model}' --set qc='${qc_name}' --set mqc='${mqc_name}'"
     """
     OUTPUT_YAML="${params.run_id}_to_db.yaml"
 
@@ -26,7 +27,7 @@ process DB_FILLER {
     for i in "\${!FILES[@]}"; do
       file="\${FILES[\$i]}"
       if [ "\$i" -eq 0 ]; then
-        python3 ${moduleDir}/db_filler.py --input_json "\$file" --output_yaml "\$OUTPUT_YAML" --keys_prefix '${params.run_id}' ${set_params}
+        python3 ${moduleDir}/db_filler.py --input_json "\$file" --output_yaml "\$OUTPUT_YAML" --keys_prefix basecalling_${params.modifications.replaceAll(',','-')} ${set_params}
       else
         python3 ${moduleDir}/db_filler.py --input_json "\$file" --output_yaml "\$OUTPUT_YAML" --keys_prefix '${params.run_id}'
       fi

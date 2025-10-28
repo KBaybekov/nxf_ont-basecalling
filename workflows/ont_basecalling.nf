@@ -5,9 +5,8 @@
 */
 include { FAST5_TO_POD5 } from '../modules/local/fast5_to_pod5'
 include { GROUP_POD5S } from '../modules/local/group_pod5s'
-include { DORADO_BASECALLING } from '../modules/local/dorado_basecalling/dorado_basecalling'
+include { DORADO_BASECALLING } from '../modules/local/dorado_basecalling/main'
 include { SEQUALI } from '../modules/nf-core/sequali/main' 
-include { COLLECT_RESULTS } from '../modules/local/collect_results'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { DB_FILLER              } from '../modules/local/db_filler/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -30,8 +29,8 @@ workflow ONT_BASECALLING {
     ch_samplesheet // channel: samplesheet read in from --input
     main:
 
-    ch_versions = Channel.empty()
-    ch_multiqc_files = Channel.empty()
+    ch_versions = channel.empty()
+    ch_multiqc_files = channel.empty()
 
     ch_samplesheet.branch {_meta, file ->
     fast5: file.toString().endsWith('.fast5')
@@ -74,24 +73,24 @@ workflow ONT_BASECALLING {
     //
     // MODULE: MultiQC
     //
-    ch_multiqc_config        = Channel.fromPath(
+    ch_multiqc_config        = channel.fromPath(
         "$projectDir/assets/multiqc_config.yml", checkIfExists: true)
     ch_multiqc_custom_config = params.multiqc_config ?
-        Channel.fromPath(params.multiqc_config, checkIfExists: true) :
-        Channel.empty()
+        channel.fromPath(params.multiqc_config, checkIfExists: true) :
+        channel.empty()
     ch_multiqc_logo          = params.multiqc_logo ?
-        Channel.fromPath(params.multiqc_logo, checkIfExists: true) :
-        Channel.empty()
+        channel.fromPath(params.multiqc_logo, checkIfExists: true) :
+        channel.empty()
 
     summary_params      = paramsSummaryMap(
         workflow, parameters_schema: "nextflow_schema.json")
-    ch_workflow_summary = Channel.value(paramsSummaryMultiqc(summary_params))
+    ch_workflow_summary = channel.value(paramsSummaryMultiqc(summary_params))
     ch_multiqc_files = ch_multiqc_files.mix(
         ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_custom_methods_description = params.multiqc_methods_description ?
         file(params.multiqc_methods_description, checkIfExists: true) :
         file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
-    ch_methods_description                = Channel.value(
+    ch_methods_description                = channel.value(
         methodsDescriptionText(ch_multiqc_custom_methods_description))
 
     ch_multiqc_files = ch_multiqc_files.mix(
@@ -129,7 +128,7 @@ workflow ONT_BASECALLING {
     json_files = SEQUALI.out.json.map { _meta, json -> json }
 
     // Вызов process: передаём три val + channel с json'ами
-    DB_FILLER(ch_ubam_first, ch_qc_first, ch_mqc_first, json_files)
+    DB_FILLER(ch_ubam_first, DORADO_BASECALLING.out.used_model, ch_qc_first, ch_mqc_first, json_files)
 
 
     emit:
