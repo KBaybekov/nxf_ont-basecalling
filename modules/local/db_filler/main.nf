@@ -1,4 +1,5 @@
 process DB_FILLER {
+    label "process_low"
     publishDir "${params.outdir}", mode: 'copy'
 
     input:

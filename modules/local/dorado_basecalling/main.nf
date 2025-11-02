@@ -11,13 +11,14 @@
 process DORADO_BASECALLING {
     tag "$meta.id"
     label 'gpu_intensive_task'
+    containerOptions '--gpus all'
 
     conda "${moduleDir}/dorado_environment.yml"
     container params.dorado_container
     
 
     input:
-    tuple val(meta), path(pod5_folder)
+    tuple val(meta), path(pod5_folder), path(model_dir)
 
     output:
     tuple val(meta), path("*.ubam"),      emit: ubam
@@ -33,7 +34,7 @@ process DORADO_BASECALLING {
     def modifications_list = params.modifications != "basic" ? "--modified-bases ${params.modifications}":""
     def mod = params.modifications != "basic" ? params.modifications.replaceAll(',', '_'):params.modifications
     def ubam_name = "${params.sample}_${mod}:${meta.pore_version}"
-    def models_dir = params.model_dir ? "--models-directory ${params.model_dir}": ""
+    def models_dir = model_dir ? "--models-directory ${model_dir}": ""
 
     if (!params.basecalling_model.contains("fast") && meta.pore == 'r1041') {
         dorado_cmd = """

@@ -1,6 +1,8 @@
 process SEQUALI {
     tag "$meta.id"
     label 'process_medium'
+    executor 'slurm'
+    queue    'gpu_nodes'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

@@ -11,4 +11,3 @@ sequali:
     - q20_bases
     - total_gc_bases
     - total_n_bases
-    - read_pair_info

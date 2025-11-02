@@ -3,7 +3,8 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FAST5_TO_POD5 } from '../modules/local/fast5_to_pod5'
+include { FAST5_TO_POD5_BATCH } from '../modules/local/fast5_to_pod5_batch'
+//include { FAST5_TO_POD5 } from '../modules/local/fast5_to_pod5'
 include { GROUP_POD5S } from '../modules/local/group_pod5s'
 include { DORADO_BASECALLING } from '../modules/local/dorado_basecalling/main'
 include { SEQUALI } from '../modules/nf-core/sequali/main' 
@@ -36,16 +37,42 @@ workflow ONT_BASECALLING {
     fast5: file.toString().endsWith('.fast5')
     pod5: file.toString().endsWith('.pod5')}
     .set { ch_branched }
+    
+    
+    size_sorted_fast5_files_batches = ch_branched.fast5
+                .toSortedList { a, b -> 
+                    b[1].size() <=> a[1].size()  // сортировка по убыванию размера файла
+                }
+                .flatten()
+                .collate(2)  // восстанавливаем структуру [meta, file]
+                .buffer(size: 16)
+                .map { batch -> 
+                    def meta = batch[0][0]  // берем мету из первого элемента
+                    def files = batch.collect { it[1] }  // собираем все файлы
+                    [meta, files]
+                }
 
+
+    FAST5_TO_POD5_BATCH(size_sorted_fast5_files_batches)
+
+    /*
+    Раскомментировать при работе не в slurm
     FAST5_TO_POD5(ch_branched.fast5)
+    */
 
-    ch_prepared = ch_branched.pod5.mix(FAST5_TO_POD5.out.pod5)
+    converted_pod5s_ch = FAST5_TO_POD5_BATCH.out.pod5.transpose()
+
+    ch_prepared = ch_branched.pod5.mix(converted_pod5s_ch)
     ch_pod5s = ch_prepared
                 .groupTuple()
 
     GROUP_POD5S(ch_pod5s)
 
-    DORADO_BASECALLING(GROUP_POD5S.out.folder)
+    ch_basecalling_data = GROUP_POD5S.out.folder.map {meta, pod5_d ->
+                            [meta, pod5_d, params.model_dir]
+                            }
+    
+    DORADO_BASECALLING(ch_basecalling_data)
 
     SEQUALI(DORADO_BASECALLING.out.ubam)
 
@@ -53,7 +80,7 @@ workflow ONT_BASECALLING {
     // Collate and save software versions
     //
     ch_versions = ch_versions
-                    .mix(FAST5_TO_POD5.out.versions)
+                    .mix(FAST5_TO_POD5_BATCH.out.versions)
                     .mix(GROUP_POD5S.out.versions)
                     .mix(DORADO_BASECALLING.out.versions)
                     .mix(SEQUALI.out.versions)
