@@ -24,9 +24,6 @@ process GROUP_POD5S {
         fi
     done
 
-    echo "Files in folder:"
-    ls -la ${meta.id}_pod5_folder/
-    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bash: \$(bash --version | head -n1 | cut -d' ' -f4)
