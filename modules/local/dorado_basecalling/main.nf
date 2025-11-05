@@ -52,7 +52,6 @@ process DORADO_BASECALLING {
         dorado_cmd = """
             dorado basecaller \\
             $args \\
-            $models_dir \\
             $modifications_list \\
             --device cuda:all \\
             --emit-moves \\
