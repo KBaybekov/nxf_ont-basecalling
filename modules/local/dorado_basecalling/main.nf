@@ -34,7 +34,8 @@ process DORADO_BASECALLING {
     def modifications_list = params.modifications != "basic" ? "--modified-bases ${params.modifications}":"--emit-moves"
     def mod = params.modifications != "basic" ? params.modifications.replaceAll(',', '_'):params.modifications
     def ubam_name = "${params.sample}_${mod}:${meta.pore_version}"
-    def models_dir = model_dir ? "--models-directory ${model_dir}": ""
+    //def models_dir = model_dir ? "--models-directory ${model_dir}": ""
+    def models_dir = "--models-directory /models/"
 
     if (!params.basecalling_model.contains("fast") && meta.pore == 'r1041') {
         dorado_cmd = """
