@@ -82,11 +82,11 @@ workflow PIPELINE_INITIALISATION {
         .map { row ->
             def file = row[0]
             def meta = [:]
-            meta.id = params.sample
-            meta.pore_version = params.pore       
+            meta.sample = params.sample
             return [meta, file]
         }
         .set { ch_samplesheet }
+
     emit:
     samplesheet = ch_samplesheet
     versions    = ch_versions

@@ -1,8 +1,7 @@
 process SEQUALI {
-    tag "$meta.id"
+    tag "$meta.ubam"
     label 'process_medium'
-    executor 'slurm'
-    queue    'gpu_nodes'
+    scratch true
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -10,11 +9,9 @@ process SEQUALI {
         'community.wave.seqera.io/library/pip_sequali:7cf7ece924aad25a' }"
 
     input:
-
     tuple val(meta), path(reads)
 
     output:
-
     tuple val(meta), path("*.html"), emit: html
     tuple val(meta), path("*.json"), emit: json
     path "versions.yml"            , emit: versions
@@ -28,12 +25,13 @@ process SEQUALI {
     def read_1_bam = reads.size() == 1 ? reads : reads[0]
     def read_2 = reads.size() == 2 ? reads[1]: ""
 
+    def qc_name = file(meta.ubam).baseName
     """
     sequali \\
         $args \\
         -t $task.cpus \\
-        --html ${params.run_id}_sequali.html \\
-        --json ${params.run_id}_sequali.json \\
+        --html basecalling_${qc_name}_sequali.html \\
+        --json basecalling_${qc_name}_sequali.json \\
         $read_1_bam \\
         $read_2
 

@@ -8,70 +8,107 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-process DORADO_BASECALLING {
-    tag "$meta.id"
-    label 'gpu_intensive_task'
-    containerOptions '--gpus all'
+process PREPARE_BASECALLING_COMMANDS {
+    tag "${meta.experiment_type}_${meta.pore}_${meta.sequencing_kit}_${meta.sample_frequency}_${meta.pore_speed}"
+    label 'process_low'
 
-    conda "${moduleDir}/dorado_environment.yml"
-    container params.dorado_container
+    input:
+    tuple val(meta), path(files)
+    
+    output:
+    tuple val(meta), path(files), path("tasks_*.json"), emit: tasks
+
+    script:
+    def yamlFile = file("${moduleDir}/modifications_and_models.yaml")
+    def yaml = new org.yaml.snakeyaml.Yaml()
+    def config = yaml.load(yamlFile.text)
+
+    def baseTemplate = meta.pore == 'r941' ?
+        config.templates[meta.pore].basic :
+        config.templates[meta.pore][meta.experiment_type].basic
+    def ubam_name = "${params.sample}:basic:${meta.experiment_type}_${meta.pore}.ubam"
+    def modConfig = meta.experiment_type == 'dna' ? 
+        config.models[meta.pore].dna : 
+        config.models[meta.pore].rna[meta.pore_speed]
+    def baseCommand = baseTemplate
+                        .replace('\n', '')
+                        .replace('\\', '')
+                        .replaceAll('\\s+', ' ')
+                        .replace('{args}', task.ext.args ?: '')
+                        .replace('{basecalling_model}', modConfig.basic)
+                        .replace('{ubam_name}', ubam_name)
+
+    def tasks = [[command: baseCommand, ubam: ubam_name] + meta]
+    
+    if (params.basecall_modifications) {
+        def modTemplate = meta.pore == 'r941' ?
+            config.templates[meta.pore].modifications :
+            config.templates[meta.pore][meta.experiment_type].modifications
+        modConfig.modifications.each { modName, modModel ->
+            def mod_ubam_name = "${params.sample}:${modName.replaceAll(',','-')}:${meta.experiment_type}_${meta.pore}.ubam"
+            def modCommand = modTemplate
+                                .replace('\n', '')
+                                .replace('\\', '')
+                                .replaceAll('\\s+', ' ')
+                                .replace('{args}', task.ext.args ?: '')
+                                .replace('{modifications}', modName.replaceAll(',',' '))
+                                .replace('{basecalling_model}', modModel)
+                                .replace('{ubam_name}', mod_ubam_name)
+            tasks.add([command: modCommand, ubam: mod_ubam_name, modification: modName] + meta)
+        }
+    }
+
+    def jsonCommands = tasks.withIndex().collect { taskData, idx ->
+        def jsonContent = new groovy.json.JsonBuilder(taskData).toPrettyString()
+        "cat > tasks_${idx}.json << 'JSONEOF'\n${jsonContent}\nJSONEOF"
+    }.join('\n\n')
+
+    """
+    ${jsonCommands}
+    """
+}
+
+
+process DORADO_BASECALLING {
+    tag "$meta.ubam"
+    label 'gpu_intensive_task'
+    containerOptions "--gpus ${task.accelerator.request}"
+    stageInMode 'symlink'
+
+    conda "${moduleDir}/environment.yml"
+    container 'nanoporetech/dorado:latest'  // базовый контейнер
     
 
     input:
-    tuple val(meta), path(pod5_folder), path(model_dir)
+    tuple val(meta), path(pod5_files)
 
     output:
     tuple val(meta), path("*.ubam"),      emit: ubam
-    env(USED_MODEL), emit: used_model 
+    path "*used_model.txt", emit: used_model  
     path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}:"
-    def modifications_list = params.modifications != "basic" ? "--modified-bases ${params.modifications}":"--emit-moves"
-    def mod = params.modifications != "basic" ? params.modifications.replaceAll(',', '_'):params.modifications
-    def ubam_name = "${params.sample}_${mod}:${meta.pore_version}"
-    //def models_dir = model_dir ? "--models-directory ${model_dir}": ""
-    def models_dir = "--models-directory /models/"
+    task.container = meta.pore == 'r941' ? 'nanoporetech/dorado:sha268dcb4cd02093e75cdc58821f8b93719c4255ed' :
+                 meta.pore == 'r1041' ? 'nanoporetech/dorado:shae423e761540b9d08b526a1eb32faf498f32e8f22' :
+                 'nanoporetech/dorado:latest' 
 
-    if (!params.basecalling_model.contains("fast") && meta.pore == 'r1041') {
-        dorado_cmd = """
-            dorado duplex \\
-            $args \\
-            $models_dir \\
-            $modifications_list \\
-            --device cuda:all \\
-            --recursive \\
-            $params.basecalling_model \\
-            ${pod5_folder}/ > ${ubam_name}.ubam
-        """
-    } else {
-        dorado_cmd = """
-            dorado basecaller \\
-            $args \\
-            $modifications_list \\
-            --device cuda:all \\
-            --emit-moves \\
-            --recursive \\
-            $params.basecalling_model \\
-            ${pod5_folder}/ > ${ubam_name}.ubam
-        """
-    }
-    
+    def dorado_cmd = meta.command
+    def tag = "BASECALLING_${file(meta.ubam).baseName.replaceAll(':', '_')}"
     """
     ${dorado_cmd}
 
-    export USED_MODEL=\$(samtools view \\
-    -H ${ubam_name}.ubam \\
+    samtools view \\
+    -H ${meta.ubam} \\
     | grep -oP \\
     'basecall_model=\\K[^ ]+' \\
-    | head -1)
+    | head -1 \\
+    > ${file(meta.ubam).baseName}_used_model.txt
 
     cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
+    "${tag}":
         dorado: \$(dorado --version 2>&1 | head -n1 | sed 's/dorado //')
     END_VERSIONS
     """

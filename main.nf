@@ -13,7 +13,8 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { ONT_BASECALLING         } from './workflows/ont_basecalling'
+//include { ONT_BASECALLING         } from './workflows/ont_basecalling'
+include { OXFORD_NANOPORE_BASECALLING } from './workflows/local/oxford_nanopore_basecalling'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_basecalling_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_basecalling_pipeline'
 /*
@@ -49,17 +50,19 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-
+    /*
     ONT_BASECALLING (
         PIPELINE_INITIALISATION.out.samplesheet
     )
+    */
+    OXFORD_NANOPORE_BASECALLING(PIPELINE_INITIALISATION.out.samplesheet)
     //
     // SUBWORKFLOW: Run completion tasks
     //
     PIPELINE_COMPLETION (
         params.outdir,
         params.monochrome_logs,
-        ONT_BASECALLING.out.multiqc_report
+        OXFORD_NANOPORE_BASECALLING.out.multiqc_report
     )
 }
 

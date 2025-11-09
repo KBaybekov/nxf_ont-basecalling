@@ -1,0 +1,135 @@
+templates:
+  r941:
+    basic: |
+      dorado basecaller \\
+        {args} \\
+        --models-directory /models/ \\
+        --device cuda:all \\
+        --emit-moves \\
+        --recursive \\
+        {basecalling_model} \\
+        \$PWD > {ubam_name}
+
+    modifications: |
+      dorado basecaller \\
+        {args} \\
+        --models-directory /models/ \\
+        --device cuda:all \\
+        --modified-bases {modifications} \\
+        --emit-moves \\
+        --recursive \\
+        {basecalling_model} \\
+        \$PWD > {ubam_name}
+  
+  r1041:
+    dna:
+      basic: |
+        dorado duplex \\
+          {args} \\
+          --models-directory /models/ \\
+          --device cuda:all \\
+          --recursive \\
+          {basecalling_model} \\
+          \$PWD > {ubam_name}
+      
+      modifications: |
+        dorado duplex \\
+          {args} \\
+          --models-directory /models/ \\
+          --modified-bases {modifications} \\
+          --device cuda:all \\
+          --recursive \\
+          {basecalling_model} \\
+          \$PWD > {ubam_name}
+    
+    rna:
+      basic: |
+        dorado basecaller \\
+          {args} \\
+          --models-directory /models/ \\
+          --device cuda:all \\
+          --emit-moves \\
+          --recursive \\
+          {basecalling_model} \\
+          \$PWD > {ubam_name}
+      
+      modifications: |
+        dorado basecaller \\
+          {args} \\
+          --models-directory /models/ \\
+          --device cuda:all \\
+          --modified-bases {modifications} \\
+          --emit-moves \\
+          --recursive \\
+          {basecalling_model} \\
+          \$PWD > {ubam_name}
+
+  rp4:
+    rna:
+      basic: |
+        dorado basecaller \\
+          {args} \\
+          --models-directory /models/ \\
+          --device cuda:all \\
+          --emit-moves \\
+          --recursive \\
+          {basecalling_model} \\
+          \$PWD > {ubam_name}
+      
+      modifications: |
+        dorado basecaller \\
+          {args} \\
+          --models-directory /models/ \\
+          --device cuda:all \\
+          --modified-bases {modifications} \\
+          --emit-moves \\
+          --recursive \\
+          {basecalling_model} \\
+          \$PWD > {ubam_name}
+
+models:
+  r941:
+    dna:
+      basic: sup
+      
+      modifications:
+        5mCG: sup@v3.3
+        5mCG_5hmCG: sup@v3.3
+    
+    rna:
+      70bps:
+        basic: /models/rna002_70bps_hac@v3/
+      
+      130bps:
+        basic: unknown
+        
+        modifications:
+          m5C,m6A_DRACH: unknown
+          inosine_m6A,pseU: unknown
+          m6A: unknown
+  
+  r1041:
+    dna:
+      basic: sup
+      
+      modifications:
+        4mC_5mC,6mA: sup
+        5mC_5hmC: sup
+        5mCG_5hmCG: sup
+    
+    rna:
+      130bps:
+        basic: sup
+        modifications:
+          pseU_2OmeU,inosine_m6A_2OmeA,2OmeG: sup
+          m6A_DRACH,m5C_2OmeC: sup
+          inosine_m6A,m5C,pseU: auto
+
+  rp4:
+    rna:
+      130bps:
+        basic: sup
+        modifications:
+          pseU_2OmeU,inosine_m6A_2OmeA,2OmeG: sup
+          m6A_DRACH,m5C_2OmeC: sup
+          inosine_m6A,m5C,pseU: auto

@@ -10,7 +10,7 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir", "sample"],
+            "required": ["input", "outdir", "sample", "basecall_modifications"],
             "properties": {
                 "input": {
                     "type": "string",
@@ -33,44 +33,19 @@
                     "type": "string",
                     "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
                     "fa_icon": "fas fa-file-signature",
-                    "default": "sample_r941_basic_basecalling"
+                    "default": "sample_basecalling"
                 },
                 "sample": {
                     "type": "string",
                     "default": "sample",
                     "pattern": "^.+$",
                     "description": "Sample name (must contain letters)"
+                },
+                "basecall_modifications": {
+                    "type": "boolean",
+                    "default": true
                 }
             }
-        },
-        "dorado_basecaller": {
-            "title": "dorado basecaller",
-            "type": "object",
-            "description": "dorado basecaller options",
-            "default": "",
-            "properties": {
-                "dorado_container": {
-                    "type": "string",
-                    "default": "nanoporetech/dorado:sha268dcb4cd02093e75cdc58821f8b93719c4255ed"
-                },
-                "model_dir": {
-                    "type": "string",
-                    "format": "directory-path"
-                },
-                "basecalling_model": {
-                    "type": "string",
-                    "default": "sup"
-                },
-                "modifications": {
-                    "type": "string",
-                    "default": "basic"
-                },
-                "pore": {
-                    "type": "string",
-                    "default": "r941"
-                }
-            },
-            "required": ["dorado_container", "model_dir", "basecalling_model", "pore"]
         },
         "generic_options": {
             "title": "Generic options",
@@ -166,16 +141,13 @@
             "$ref": "#/$defs/input_output_options"
         },
         {
-            "$ref": "#/$defs/dorado_basecaller"
-        },
-        {
             "$ref": "#/$defs/generic_options"
         }
     ],
     "properties": {
         "run_id": {
             "type": "string",
-            "default": "sample_r941_basic:basecalling"
+            "default": "sample:basecalling"
         }
     }
 }
