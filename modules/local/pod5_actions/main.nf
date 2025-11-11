@@ -1,8 +1,10 @@
 process FAST5_TO_POD5 {
     tag "$fast5_file"
     label 'process_low'
-    scratch false
-    array 32
+    scratch '/dev/shm'
+    array 64
+    stageInMode 'symlink'
+    stageOutMode 'move'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -38,7 +40,9 @@ process FAST5_TO_POD5 {
 process EXTRACT_POD5_METADATA {
     tag "$pod5_file"
     label 'process_low'
-    array 32
+    scratch '/dev/shm'
+    array 64
+    stageInMode 'symlink'
     
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
