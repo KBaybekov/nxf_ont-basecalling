@@ -73,7 +73,7 @@ process DORADO_BASECALLING {
     tag "$meta.ubam"
     label 'gpu_intensive_task'
     containerOptions "--gpus ${task.accelerator.request}"
-    memory "${task.accelerator.request * 50}.GB"
+    memory "${task.accelerator.request * 64}.GB"
     stageInMode 'symlink'
 
     conda "${moduleDir}/environment.yml"
