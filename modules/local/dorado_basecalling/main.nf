@@ -93,7 +93,7 @@ process DORADO_BASECALLING {
 
     script:
     task.container = meta.pore == 'r941' ? 'nanoporetech/dorado:sha268dcb4cd02093e75cdc58821f8b93719c4255ed' :
-                 meta.pore == 'r1041' ? 'nanoporetech/dorado:shae423e761540b9d08b526a1eb32faf498f32e8f22' :
+                 meta.pore in ['r1041', 'rp4'] ? 'nanoporetech/dorado:shae423e761540b9d08b526a1eb32faf498f32e8f22' :
                  'nanoporetech/dorado:latest' 
 
     def dorado_cmd = meta.command
