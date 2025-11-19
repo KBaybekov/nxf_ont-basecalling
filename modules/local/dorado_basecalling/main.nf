@@ -72,7 +72,9 @@ process PREPARE_BASECALLING_COMMANDS {
 process DORADO_BASECALLING {
     tag "$meta.ubam"
     label 'gpu_intensive_task'
-    containerOptions "--gpus ${task.accelerator.request}"
+    containerOptions task.ext.gpu_ids ? 
+            "--gpus device=${task.ext.gpu_ids}" : 
+            "--gpus ${task.accelerator.request}"
     memory "${task.accelerator.request * 64}.GB"
     stageInMode 'symlink'
 
