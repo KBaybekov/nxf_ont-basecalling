@@ -72,6 +72,7 @@ process PREPARE_BASECALLING_COMMANDS {
 process DORADO_BASECALLING {
     tag "$meta.ubam"
     label 'gpu_intensive_task'
+    cpus task.accelerator.request * 32
     memory "${task.accelerator.request * 64}.GB"
     stageInMode 'symlink'
 
@@ -83,9 +84,9 @@ process DORADO_BASECALLING {
     tuple val(meta), path(pod5_files)
 
     output:
-    tuple val(meta), path("*.ubam"),      emit: ubam
-    path "*used_model.txt", emit: used_model  
-    path "versions.yml", emit: versions
+    tuple val(meta), path("*.ubam"), emit: ubam
+    path "*used_model.txt",          emit: used_model  
+    path "versions.yml",             emit: versions
 
     when:
     task.ext.when == null || task.ext.when
